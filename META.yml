@@ -1,0 +1,25 @@
+---
+name: CGI-Application-NetNewsIface
+version: 0.0100_00
+author:
+  - Shlomi Fish <shlomif@iglu.org.il>
+abstract: |-
+  a publicly-accessible read-only interface 
+  for Usenet (NNTP) news.
+license: bsd
+resources:
+  license: http://www.opensource.org/licenses/bsd-license.php
+requires:
+  CGI::Application: 0
+  CGI::Application::Plugin::TT: 0
+  Class::Accessor: 0
+  Net::NNTP: 0
+  Test::More: 0
+provides:
+  CGI::Application::NetNewsIface:
+    file: lib/CGI/Application/NetNewsIface.pm
+    version: 0.0100_00
+generated_by: Module::Build version 0.2704
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.2.html
+  version: 1.2
