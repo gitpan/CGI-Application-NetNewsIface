@@ -32,9 +32,11 @@ use XML::RSS;
 
 use Net::NNTP;
 
+use CGI::Application::NetNewsIface::ConfigData;
+
 use vars qw($VERSION);
 
-$VERSION = "0.0100_00";
+$VERSION = "0.0100_01";
 
 use CGI;
 
@@ -124,7 +126,9 @@ sub cgiapp_prerun
     # TODO : There may be a more efficient/faster way to do it, but I'm 
     # anxious to get it to work. -- Shlomi Fish
     $self->tt_include_path(
-        [ './templates' ],
+        [ './templates',
+          @{CGI::Application::NetNewsIface::ConfigData->config('templates_install_path')},
+        ],
     );
 
     # This is so the CGI header won't print a character set.
