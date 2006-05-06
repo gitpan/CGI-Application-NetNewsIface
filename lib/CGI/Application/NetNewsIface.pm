@@ -10,16 +10,28 @@ for Usenet (NNTP) news.
 
 =head1 SYNOPSIS
 
+In a common module:
+
     use CGI::Application::NetNewsIface;
 
-    my $app = CGI::Application::NetNewsIface->new(
-        PARAMS => {
-            'nntp_server' => "nntp.perl.org",
-            'articles_per_page' => 10,
-        },
-    );
+    sub get_app
+    {
+        return CGI::Application::NetNewsIface->new(
+            PARAMS => {
+                'nntp_server' => "nntp.perl.org",
+                'articles_per_page' => 10,
+                'dsn' => "dbi:SQLite:dbname=./data/mynntp.sqlite",
+            }
+        );
+    }
 
-    $app->run();
+To set up:
+
+    get_app()->init_cache__sqlite();
+
+To run
+
+    get_app()->run();
 
 =cut
 
@@ -34,9 +46,11 @@ use Net::NNTP;
 
 use CGI::Application::NetNewsIface::ConfigData;
 
+use CGI::Application::NetNewsIface::Cache::DBI;
+
 use vars qw($VERSION);
 
-$VERSION = "0.0100_01";
+$VERSION = "0.0100_02";
 
 use CGI;
 
@@ -85,6 +99,10 @@ The Server to which to connect using NNTP.
 =head2 articles_per_page
 
 The number of articles to display per page of listing of a newsgroup.
+
+=head2 dsn
+
+The DBI 'dsn' for the cache.
 
 =head1 FUNCTIONS
 
@@ -492,9 +510,55 @@ sub _article_display_page
             'show_headers' => $self->_get_show_headers(),
             'first_art' => $first_article,
             'last_art' => $last_article,
+            'thread' => $self->_get_thread($nntp),
         },
     );
-        
+}
+
+sub _thread_render_node
+{
+    my ($self, $node, $current) = @_;
+    my $subj = CGI::escapeHTML($node->{subject});
+    my $node_text = 
+        ($node->{idx} == $current) ?
+            "<b>$subj</b>" :
+            qq|<a href="$node->{idx}">$subj</a>|
+        ;
+
+    return "<li>$node_text " .
+        CGI::escapeHTML($node->{from}) .
+        (exists($node->{subs}) ?
+            ("<br /><ul>" .
+            join("",
+                map 
+                    {$self->_thread_render_node($_, $current) } 
+                @{$node->{subs}}
+            ) .
+            "</ul>") :
+            ""
+        ) .
+        "</li>";
+}
+
+# TODO :
+# 2. Make the current article non-linked and bold.
+# 3. Add the date (?).
+sub _get_thread
+{
+    my ($self, $nntp) = @_;
+    my $article = $self->param('article');
+
+    my $cache = CGI::Application::NetNewsIface::Cache::DBI->new(
+        {
+            'nntp' => $nntp,
+            'dsn' => $self->param('dsn'),
+        },
+    );
+    $cache->select($self->param('group'));
+
+    my ($thread, $coords) = $cache->get_thread($article);
+
+    return "<ul>" . $self->_thread_render_node($thread, $article) . "</ul>";
 }
 
 sub _css
@@ -518,6 +582,52 @@ sub _css
 }
 EOF
 }
+
+=head2 $cgiapp->update_group($group)
+
+Updates the cache records for the NNTP group C<$group>. This method is used
+for maintenance, to make sure a script loads promptly.
+
+=cut
+
+sub update_group
+{
+    my $self = shift;
+    my $group = shift;
+
+    my $cache = CGI::Application::NetNewsIface::Cache::DBI->new(
+        {
+            'nntp' => $self->_get_nntp(),
+            'dsn' => $self->param('dsn'),
+        },
+    );
+    $cache->select($group);
+}
+
+=head2 $cgiapp->init_cache__sqlite()
+
+Initializes the SQLite cache that is pointed by the DBI DSN given as
+a parameter to the CGI script. This should be called before any use of the
+CGI Application itself, because otherwise there will be no tables to operate
+on.
+
+=cut
+
+sub init_cache__sqlite
+{
+    my $self = shift;
+
+    require DBI;
+
+    my $dbh = DBI->connect($self->param('dsn'), "", "");
+    $dbh->do("CREATE TABLE groups (name varchar(255), idx INTEGER PRIMARY KEY AUTOINCREMENT, last_art INTEGER)");
+    $dbh->do("CREATE TABLE articles (group_idx INTEGER, article_idx INTEGER, msg_id varchar(255), parent INTEGER, subject varchar(255), frm varchar(255), date varchar(255))");
+    $dbh->do("CREATE UNIQUE INDEX idx_groups_name ON groups (name)");
+    $dbh->do("CREATE UNIQUE INDEX idx_articles_primary ON articles (group_idx, article_idx)");
+    $dbh->do("CREATE INDEX idx_articles_msg_id ON articles (group_idx, msg_id)");
+    $dbh->do("CREATE INDEX idx_articles_parent ON articles (group_idx, parent)");
+}
+
 1;
 
 =head1 AUTHOR
@@ -534,9 +644,7 @@ your bug as I make changes.
 
 =head2 Known Bugs
 
-The templates are assumed to be under ./templates and are not installed
-under a more meaningful place. (And the code is not configured to use them 
-from there.)
+None, but it doesn't mean there aren't any bugs.
 
 =head1 ACKNOWLEDGEMENTS
 

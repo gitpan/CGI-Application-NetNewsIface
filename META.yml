@@ -1,6 +1,6 @@
 ---
 name: CGI-Application-NetNewsIface
-version: 0.0100_01
+version: 0.0100_02
 author:
   - Shlomi Fish <shlomif@iglu.org.il>
 abstract: |-
@@ -13,12 +13,15 @@ requires:
   CGI::Application: 0
   CGI::Application::Plugin::TT: 0
   Class::Accessor: 0
+  DBD::SQLite: 0
   Net::NNTP: 0
   Test::More: 0
 provides:
   CGI::Application::NetNewsIface:
     file: lib/CGI/Application/NetNewsIface.pm
-    version: 0.0100_01
+    version: 0.0100_02
+  CGI::Application::NetNewsIface::Cache::DBI:
+    file: lib/CGI/Application/NetNewsIface/Cache/DBI.pm
 generated_by: Module::Build version 0.2704
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.2.html
