@@ -1,8 +1,8 @@
 ---
 name: CGI-Application-NetNewsIface
-version: 0.0101
+version: 0.02
 author:
-  - Shlomi Fish <shlomif@iglu.org.il>
+  - 'Shlomi Fish <shlomif@iglu.org.il>'
 abstract: |-
   a publicly-accessible read-only interface 
   for Usenet (NNTP) news.
@@ -16,13 +16,14 @@ requires:
   DBD::SQLite: 0
   Net::NNTP: 0
   Test::More: 0
+  XML::RSS: 0
 provides:
   CGI::Application::NetNewsIface:
     file: lib/CGI/Application/NetNewsIface.pm
-    version: 0.0101
+    version: 0.02
   CGI::Application::NetNewsIface::Cache::DBI:
     file: lib/CGI/Application/NetNewsIface/Cache/DBI.pm
-generated_by: Module::Build version 0.2704
+generated_by: Module::Build version 0.2808
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.2.html
   version: 1.2

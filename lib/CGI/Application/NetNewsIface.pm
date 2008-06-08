@@ -50,7 +50,7 @@ use CGI::Application::NetNewsIface::Cache::DBI;
 
 use vars qw($VERSION);
 
-$VERSION = "0.0101";
+$VERSION = "0.02";
 
 use CGI;
 
@@ -81,6 +81,11 @@ my %modes =
         'url' => "/style.css",
         'func' => "_css",
     },
+    'about_app' =>
+    {
+        'url' => "/cgi-app-nni/",
+        'func' => "_about_app_page",
+    }
 );
 
 my %urls_to_modes = (map { $modes{$_}->{'url'} => $_ } keys(%modes));
@@ -225,6 +230,10 @@ sub _determine_mode
     {
         return "css";
     }
+    elsif ($path eq "/cgi-app-nni/")
+    {
+        return "about_app";
+    }
     elsif ($path =~ s{^/group/}{})
     {
         if ($path eq "")
@@ -310,7 +319,27 @@ sub _main_page
 {
     my $self = shift;
 
-    return "<html><body><h1>Hello</h1></body></html>";
+    return $self->tt_process(
+        'main_page.tt',
+        {
+            'path_to_root' => $self->_get_path_to_root(),
+            'title' => "Web Interface to the News Server",
+            'nntp_server' => $self->param('nntp_server'),
+        },
+    );
+}
+
+sub _about_app_page
+{
+    my $self = shift;
+
+    return $self->tt_process(
+        'about_app_page.tt',
+        {
+            'title' => "About CGI-Application-NetNewsIface",
+            'path_to_root' => $self->_get_path_to_root(),
+        },
+    );
 }
 
 sub _get_nntp
@@ -616,11 +645,35 @@ on.
 sub init_cache__sqlite
 {
     my $self = shift;
+    return $self->_init_cache({'auto_inc' => "PRIMARY KEY AUTOINCREMENT"});
+}
+
+=head2 $cgiapp->init_cache__mysql()
+
+Initializes the MySQL cache that is pointed by the DBI DSN given as
+a parameter to the CGI script. This should be called before any use of the
+CGI Application itself, because otherwise there will be no tables to operate
+on.
+
+=cut
+
+sub init_cache__mysql
+{
+    my $self = shift;
+    return $self->_init_cache({'auto_inc' => "PRIMARY KEY NOT NULL AUTO_INCREMENT"});
+}
+
+sub _init_cache
+{
+    my $self = shift;
+    my $args = shift;
+
+    my $auto_inc = $args->{'auto_inc'};
 
     require DBI;
 
     my $dbh = DBI->connect($self->param('dsn'), "", "");
-    $dbh->do("CREATE TABLE groups (name varchar(255), idx INTEGER PRIMARY KEY AUTOINCREMENT, last_art INTEGER)");
+    $dbh->do("CREATE TABLE groups (name varchar(255), idx INTEGER $auto_inc, last_art INTEGER)");
     $dbh->do("CREATE TABLE articles (group_idx INTEGER, article_idx INTEGER, msg_id varchar(255), parent INTEGER, subject varchar(255), frm varchar(255), date varchar(255))");
     $dbh->do("CREATE UNIQUE INDEX idx_groups_name ON groups (name)");
     $dbh->do("CREATE UNIQUE INDEX idx_articles_primary ON articles (group_idx, article_idx)");
