@@ -10,20 +10,26 @@ sub tt_inc
 my $builder = Module::Build->new(
     module_name         => 'CGI::Application::NetNewsIface',
     license             => 'bsd',
-    dist_author         => 'Shlomi Fish <shlomif@iglu.org.il>',
+    dist_author         => 'Shlomi Fish <shlomif@cpan.org>',
     dist_version_from   => 'lib/CGI/Application/NetNewsIface.pm',
+    configure_requires => {
+        'Module::Build' => '0.37',
+    },
     requires => {
         'CGI::Application' => 0,
         'CGI::Application::Plugin::TT' => 0,
         'Class::Accessor' => 0,
         'DBD::SQLite' => 0,
+        'DBI' => 0,
         'Net::NNTP' => 0,
         'Test::More' => 0,
         'XML::RSS' => 0,
+        perl => '5.008',
+        strict => 0,
+        warnings => 0,
     },
     add_to_cleanup      => [ 'CGI-Application-NetNewsIface-*' ],
-    create_makefile_pl => 'passthrough',
-    install_path => 
+    install_path =>
     {
         templates => tt_inc(),
     },
