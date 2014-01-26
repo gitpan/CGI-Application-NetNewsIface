@@ -38,7 +38,7 @@
    "provides" : {
       "CGI::Application::NetNewsIface" : {
          "file" : "lib/CGI/Application/NetNewsIface.pm",
-         "version" : "0.0201"
+         "version" : "0.0202"
       },
       "CGI::Application::NetNewsIface::Cache::DBI" : {
          "file" : "lib/CGI/Application/NetNewsIface/Cache/DBI.pm"
@@ -48,7 +48,10 @@
    "resources" : {
       "license" : [
          "http://www.opensource.org/licenses/bsd-license.php"
-      ]
+      ],
+      "repository" : {
+         "url" : "https://bitbucket.org/shlomif/perl-cgi-application-netnewsiface/"
+      }
    },
-   "version" : "0.0201"
+   "version" : "0.0202"
 }
